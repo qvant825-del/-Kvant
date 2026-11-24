@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>КВАНТ</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,sans-serif}
+body{background:#090d16;color:#fff;padding:16px 16px 80px;display:flex;justify-content:center}
+.app{width:100%;max-width:420px}
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.logo{font-size:20px;font-weight:800;color:#38bdf8}
+.pill{background:#131b2e;padding:6px 12px;border-radius:20px;font-size:13px;border:1px solid #1e293b}
+.tab{display:none}.tab.active{display:block}
+.hero{background:linear-gradient(135deg,#1e293b,#0f172a);border:1px solid #334155;border-radius:20px;padding:22px;margin-bottom:16px}
+.bal{font-size:40px;font-weight:800;margin:8px 0 16px}.bal span{color:#38bdf8;font-size:20px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+button{border:none;padding:12px;border-radius:12px;font-weight:600;cursor:pointer;font-size:14px}
+.b1{background:#0284c7;color:#fff}.b2{background:#1e293b;color:#fff;border:1px solid #334155}
+.sm{padding:8px 12px;font-size:13px}.done{background:#1e293b;color:#4ade80}
+.card{background:#131b2e;border:1px solid #1e293b;border-radius:14px;padding:14px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.card p{font-size:12px;color:#94a3b8;margin-top:3px}
+.tx{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #1e293b;font-size:13px}
+.tx:last-child{border:none}.p{color:#4ade80;font-weight:700}.m{color:#f87171;font-weight:700}
+nav{position:fixed;bottom:0;left:0;right:0;background:#131b2e;border-top:1px solid #1e293b;display:flex;padding:8px 0 12px}
+nav button{background:none;color:#94a3b8;width:25%;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px}
+nav button.active{color:#38bdf8}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="top"><div class="logo">⚡ КВАНТ</div><div class="pill" id="hb">100 QNT</div></div>
+
+  <div id="t-w" class="tab active">
+    <div class="hero">
+      <div style="font-size:12px;color:#94a3b8">БАЛАНС КОШЕЛЬКА</div>
+      <div class="bal"><b id="mb">100</b> <span>QNT</span></div>
+      <div class="row">
+        <button class="b1" onclick="add()">+ Пополнить</button>
+        <button class="b2" onclick="send()">↗ Перевести</button>
+      </div>
+    </div>
+    <h4 style="margin-bottom:10px">История операций</h4>
+    <div class="card" style="display:block" id="txs"></div>
+  </div>
+
+  <div id="t-t" class="tab">
+    <h3 style="margin-bottom:12px">Заработать Кванты</h3>
+    <div id="tasks"></div>
+  </div>
+
+  <div id="t-s" class="tab">
+    <h3 style="margin-bottom:12px">Магазин наград</h3>
+    <div id="shop"></div>
+  </div>
+
+  <div id="t-p" class="tab">
+    <div class="card" style="display:block;text-align:center;padding:20px">
+      <h3>Пользователь #8492</h3>
+      <p style="color:#38bdf8;margin-top:6px" id="st">Статус: Базовый</p>
+    </div>
+    <h4 style="margin:14px 0 8px">Мои покупки и коды</h4>
+    <div id="inv"></div>
+    <button class="b2" style="width:100%;margin-top:20px;color:#f87171" onclick="rst()">Сбросить данные</button>
+  </div>
+</div>
+
+<nav>
+  <button class="active" onclick="go('w',this)">💳<span>Кошелек</span></button>
+  <button onclick="go('t',this)">⚡<span>Задания</span></button>
+  <button onclick="go('s',this)">🛍️<span>Магазин</span></button>
+  <button onclick="go('p',this)">👤<span>Профиль</span></button>
+</nav>
+
+<script>
+let s=JSON.parse(localStorage.getItem('kv3'))||{b:100,st:'Базовый',dn:[],iv:[],tx:[{t:'Бонус при входе',a:'+100',c:'p'}]};
+const T=[{i:'1',t:'Ежедневный вход',d:'Заходите раз в день',r:20},{i:'2',t:'Подписка на канал',d:'Новости проекта',r:50},{i:'3',t:'Пройти опрос',d:'2 минуты времени',r:40}];
+const S=[{i:'1',t:'VIP-статус',d:'Особый значок в профиле',p:150,k:'VIP-ACTIVE'},{i:'2',t:'Скидка 25%',d:'Промокод на услуги',p:80,k:'KVANT25'},{i:'3',t:'Закрытый чат',d:'Доступ в клуб',p:120,k:'t.me/+KvantVIP'}];
+const sv=()=>{localStorage.setItem('kv3',JSON.stringify(s));ui()};
+const go=(id,el)=>{document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));document.querySelectorAll('nav button').forEach(x=>x.classList.remove('active'));document.getElementById('t-'+id).classList.add('active');el.classList.add('active')};
+const add=()=>{let v=parseInt(prompt('Сколько QNT добавить?','100'));if(v>0){s.b+=v;s.tx.unshift({t:'Пополнение',a:'+'+v,c:'p'});sv()}};
+const send=()=>{let u=prompt('ID получателя:','#4510'),v=parseInt(prompt('Сумма QNT:','25'));if(u&&v>0&&s.b>=v){s.b-=v;s.tx.unshift({t:'Перевод '+u,a:'-'+v,c:'m'});sv()}else if(v>s.b)alert('Не хватает QNT!')};
+const task=i=>{if(s.dn.includes(i))return;let x=T.find(z=>z.i===i);s.dn.push(i);s.b+=x.r;s.tx.unshift({t:x.t,a:'+'+x.r,c:'p'});sv()};
+const buy=i=>{let x=S.find(z=>z.i===i);if(s.b>=x.p){s.b-=x.p;s.tx.unshift({t:'Покупка: '+x.t,a:'-'+x.p,c:'m'});s.iv.unshift({t:x.t,k:x.k});if(i==='1')s.st='VIP ⚡';sv();alert('Куплено! Код в Профиле')}else alert('Мало Квантов!')};
+const rst=()=>{localStorage.removeItem('kv3');location.reload()};
+function ui(){
+  document.getElementById('mb').textContent=s.b;
+  document.getElementById('hb').textContent=s.b+' QNT';
+  document.getElementById('st').textContent='Статус: '+s.st;
+  document.getElementById('txs').innerHTML=s.tx.map(x=>`<div class="tx"><span>${x.t}</span><span class="${x.c}">${x.a} QNT</span></div>`).join('');
+  document.getElementById('tasks').innerHTML=T.map(x=>`<div class="card"><div><b>${x.t}</b><p>${x.d}</p></div><button class="sm ${s.dn.includes(x.i)?'done':'b1'}" onclick="task('${x.i}')">${s.dn.includes(x.i)?'✓ Готово':'+'+x.r}</button></div>`).join('');
+  document.getElementById('shop').innerHTML=S.map(x=>`<div class="card"><div><b>${x.t}</b><p>${x.d}</p></div><button class="sm b1" onclick="buy('${x.i}')">${x.p} QNT</button></div>`).join('');
+  document.getElementById('inv').innerHTML=s.iv.length?s.iv.map(x=>`<div class="card"><div><b>${x.t}</b><p style="color:#38bdf8">Код: ${x.k}</p></div></div>`).join(''):'<p style="color:#94a3b8;font-size:13px">Пока пусто</p>';
+}
+ui();
+</script>
+</body>
+</html>
