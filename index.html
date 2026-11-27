@@ -1,0 +1,66 @@
+<!DOCTYPE html><html lang="ru"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>КВАНТ</title><style>:root{--b:#0f0f13;--c:#181820;--a:#7c5dfa;--m:#8e8ea0;--g:#00d084}body{margin:0;font-family:sans-serif;background:var(--b);color:#fff;padding:16px 16px 80px}.h,.r{display:flex;justify-content:space-between;align-items:center}.h{margin-bottom:16px;font-weight:700;font-size:18px}.card{background:var(--c);border-radius:16px;padding:16px;margin-bottom:16px}.box{background:#22222d;padding:12px;border-radius:12px;flex:1}.btn{background:var(--a);color:#fff;border:0;padding:12px;border-radius:12px;font-weight:700;width:100%;cursor:pointer}.bg{background:var(--g);color:#000;width:auto;padding:8px 14px}input{width:100%;box-sizing:border-box;padding:12px;border-radius:10px;border:1px solid #333;background:#121217;color:#fff;margin-bottom:10px}.it{padding:12px 0;border-bottom:1px solid #2a2a35}.nav{position:fixed;bottom:0;left:0;right:0;background:var(--c);display:flex;padding:8px;border-top:1px solid #2a2a35}.nav button{flex:1;background:0;border:0;color:var(--m);font-weight:700;padding:10px}.nav .on{color:var(--a)}.hid{display:none}canvas{width:100%;height:150px}</style></head><body>
+<div class="h"><div>⚡ КВАНТ</div><div id="ud" style="font-size:13px;color:var(--m)">...</div></div>
+<div id="w"><div class="card"><div class="r" style="gap:10px"><div class="box"><div style="font-size:11px;color:var(--m)">КВАНТЫ</div><div style="font-size:22px;font-weight:700"><span id="qb">0</span> <span style="font-size:14px;color:var(--a)">QNT</span></div></div><div class="box"><div style="font-size:11px;color:var(--m)">ДОЛЛАРЫ</div><div style="font-size:22px;font-weight:700"><span id="ub">0</span> <span style="font-size:14px;color:var(--g)">$</span></div></div></div><button class="btn" style="margin-top:12px" onclick="bon()">+ Бонус (20 QNT)</button></div>
+<div class="card"><div style="font-size:13px;color:var(--m);margin-bottom:10px">ПРОДАТЬ QNT</div><input type="number" id="sa" placeholder="Сколько QNT (напр. 50)"><input type="number" id="sp" step="0.1" placeholder="Цена за 1 QNT в $ (напр. 2.5)"><button class="btn" onclick="ord()">Выставить на биржу</button></div></div>
+<div id="m" class="hid"><div class="card"><div class="r" style="margin-bottom:8px"><span style="font-size:13px;color:var(--m)">КУРС QNT/$</span><span id="cp" style="font-weight:700;color:var(--g)">2.00 $</span></div><canvas id="cv" width="320" height="150"></canvas></div><div class="card"><div style="font-size:13px;color:var(--m);margin-bottom:8px">ЗАЯВКИ ИГРОКОВ</div><div id="ol">...</div></div></div>
+<div class="nav"><button id="bw" class="on" onclick="tab(1)">💳 Кошелек</button><button id="bm" onclick="tab(0)">📈 Биржа и График</button></div>
+<script>
+const U='https://'+'tnzkvxbdotiqkhzsqmve.supabase.co/rest/v1',K='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRuemt2eGJkb3RpcWtoenNxbXZlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTU1Njk1MzksImV4cCI6MjExMTE0NTUzOX0.f0tnX_qJlhQVAgNWcUIzh18t3xri3ygBoBPz2jvhmiY',H={'apikey':K,'Authorization':'Bearer '+K,'Content-Type':'application/json','Prefer':'return=representation'};
+let u=null,off=0;
+async function api(p,m='GET',b){let o={method:m,headers:H};if(b)o.body=JSON.stringify(b);let r=await fetch(U+p,o);if(!r.ok)throw new Error(r.status);return r.json()}
+async function go(){
+  let n=localStorage.getItem('ku')||prompt('Никнейм для биржи КВАНТ:')||'User'+Math.floor(Math.random()*999);
+  localStorage.setItem('ku',n);
+  try{
+    let d=await api('/users?username=eq.'+encodeURIComponent(n));
+    if(!d.length)d=await api('/users','POST',{username:n});
+    u=d.shift();document.getElementById('ud').innerText='@'+u.username+' 🟢';
+  }catch(e){
+    off=1;u=JSON.parse(localStorage.getItem('klu'))||{id:'loc',username:n,qnt_balance:100,usd_balance:500};
+    document.getElementById('ud').innerText='@'+u.username+' (Сеть: '+e.message+')';
+  }ui();
+}
+async function ui(){
+  if(!off)try{let d=await api('/users?id=eq.'+u.id);if(d.length)u=d.shift()}catch(e){}
+  else localStorage.setItem('klu',JSON.stringify(u));
+  document.getElementById('qb').innerText=(+u.qnt_balance).toFixed(1);
+  document.getElementById('ub').innerText=(+u.usd_balance).toFixed(2);
+  lo();lc();
+}
+async function bon(){u.qnt_balance=+u.qnt_balance+20;if(!off)await api('/users?id=eq.'+u.id,'PATCH',{qnt_balance:u.qnt_balance});ui()}
+async function ord(){
+  let a=+document.getElementById('sa').value,p=+document.getElementById('sp').value;
+  if(a<=0||p<=0||a>u.qnt_balance)return alert('Проверьте сумму');
+  u.qnt_balance=+u.qnt_balance-a;
+  if(!off){await api('/users?id=eq.'+u.id,'PATCH',{qnt_balance:u.qnt_balance});await api('/orders','POST',{seller_id:u.id,seller_name:u.username,amount:a,price:p})}
+  else{let o=JSON.parse(localStorage.getItem('klo'))||Array.of();o.push({id:''+Date.now(),seller_id:'loc',seller_name:u.username,amount:a,price:p,status:'open'});localStorage.setItem('klo',JSON.stringify(o))}
+  document.getElementById('sa').value='';document.getElementById('sp').value='';alert('Заявка создана!');ui();
+}
+async function lo(){
+  let o=Array.of();
+  if(!off)try{o=await api('/orders?status=eq.open&order=price.asc')}catch(e){}
+  else{o=JSON.parse(localStorage.getItem('klo'))||Array.of({id:'b1',seller_id:'b',seller_name:'CryptoBot',amount:25,price:2.2,status:'open'});localStorage.setItem('klo',JSON.stringify(o))}
+  let op=o.filter(x=>x.status=='open');
+  document.getElementById('ol').innerHTML=op.length?op.map(x=>`<div class="it r"><div><b>${x.amount} QNT</b> <span style="color:var(--g)">по ${x.price}$</span><div style="font-size:11px;color:var(--m)">@${x.seller_name} • ${(x.amount*x.price).toFixed(2)}$</div></div>${x.seller_id!=u.id?`<button class="btn bg" onclick="buy('${x.id}',${x.amount},${x.price})">Купить</button>`:'<span style="font-size:11px;color:var(--m)">Ваша</span>'}</div>`).join(''):'<div style="color:var(--m);font-size:13px">Нет заявок</div>';
+}
+async function buy(id,a,p){
+  let c=a*p;if(u.usd_balance<c)return alert('Мало $');
+  if(!off){try{await api('/rpc/buy_order','POST',{order_id:id,buyer_id:u.id});alert('Куплено!')}catch(e){alert('Ошибка')}}
+  else{u.usd_balance=+u.usd_balance-c;u.qnt_balance=+u.qnt_balance+a;let o=(JSON.parse(localStorage.getItem('klo'))||Array.of()).map(x=>x.id==id?{...x,status:'closed'}:x);localStorage.setItem('klo',JSON.stringify(o));let h=JSON.parse(localStorage.getItem('klh'))||Array.of(2.0);h.push(+p);localStorage.setItem('klh',JSON.stringify(h));alert('Куплено!')}
+  ui();
+}
+async function lc(){
+  let pr=Array.of(2.0);
+  if(!off)try{let h=await api('/price_history?order=created_at.asc&limit=30');if(h.length)pr=h.map(x=>+x.price)}catch(e){}
+  else pr=JSON.parse(localStorage.getItem('klh'))||Array.of(1.8,2,1.9,2.1,2);
+  document.getElementById('cp').innerText=pr.slice(-1).pop().toFixed(2)+' $';
+  let cv=document.getElementById('cv'),cx=cv.getContext('2d'),w=cv.width,h=cv.height;cx.clearRect(0,0,w,h);
+  if(pr.length==1)pr.push(pr.slice().pop());
+  let mn=Math.min(...pr)*.9,mx=Math.max(...pr)*1.1,rn=(mx-mn)||1;
+  cx.strokeStyle='#7c5dfa';cx.lineWidth=3;cx.beginPath();
+  pr.forEach((v,i)=>{let x=(i/(pr.length-1))*(w-20)+10,y=h-20-((v-mn)/rn)*(h-40);i?cx.lineTo(x,y):cx.moveTo(x,y)});
+  cx.stroke();
+}
+function tab(w){document.getElementById('w').classList.toggle('hid',!w);document.getElementById('m').classList.toggle('hid',w);document.getElementById('bw').classList.toggle('on',w);document.getElementById('bm').classList.toggle('on',!w);if(!w)ui()}
+go();
+</script></body></html>
